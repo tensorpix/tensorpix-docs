@@ -7,7 +7,7 @@
     "light": "#07C983",
     "dark": "#15803D"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon.ico",
   "navigation": {
     "tabs": [
       {
@@ -50,9 +50,9 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://docs.tensorpix.ai",
-          "icon": "book-open-cover"
+          "anchor": "Help Center",
+          "href": "https://help.tensorpix.ai",
+          "icon": "square-question"
         },
         {
           "anchor": "Community",
@@ -64,6 +64,11 @@
           "href": "https://tensorpix.ai/blog",
           "icon": "newspaper"
         }
+        {
+          "anchor": "Web Application",
+          "href": "https://app.tensorpix.ai",
+          "icon": "globe"
+        },
       ]
     }
   },
@@ -75,12 +80,12 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:devs@tensopix.ai"
+        "href": "mailto:devs@tensorpix.ai"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
+      "label": "Web Application",
       "href": "https://app.tensorpix.ai"
     }
   },
@@ -88,7 +93,8 @@
     "socials": {
       "x": "https://x.com/tensorpix",
       "github": "https://github.com/tensorpix",
-      "linkedin": "https://linkedin.com/company/tensorpix"
+      "linkedin": "https://linkedin.com/company/tensorpix",
+      "instagram": "https://instagram.com/tensorpix.ai" 
     }
   }
 }

@@ -1,0 +1,2230 @@
+openapi: 3.1.0
+info:
+  title: TensorPix OpenAPI Documentation
+  version: 1.1.0
+  termsOfService: https://tensorpix.ai/terms-conditions
+  contact:
+    name: TensorPix Dev Team
+    email: devs@tensorpix.ai
+paths:
+  /api/accounts/profile/balance/:
+    get:
+      operationId: accounts_profile_balance_retrieve
+      description: Returns the 🪙 Credits balance of the current account.
+      summary: Account Credits balance
+      tags:
+      - accounts
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditsBalance'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthenticatedError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+          description: ''
+  /api/enhanced-images/:
+    get:
+      operationId: enhanced_images_list
+      summary: List all enhanced images
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - enhanced-images
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEnhancedImageList'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthenticatedError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+          description: ''
+  /api/enhanced-images/{id}/:
+    get:
+      operationId: enhanced_images_retrieve
+      summary: Fetch individual enhanced image
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - enhanced-images
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnhancedImage'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthenticatedError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+          description: ''
+    delete:
+      operationId: enhanced_images_destroy
+      summary: Delete individual enhanced image
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - enhanced-images
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthenticatedError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+          description: ''
+  /api/images/enhance/from-url/:
+    post:
+      operationId: images_enhance_from_url_create
+      description: |-
+        Enhances a single image hosted on an publicly accessible  URL, for example: https://sample-image.com/image.jpg
+
+        If your videos are stored on S3 or another provider, you can directly enhance images using this endpoint without needing to upload the image first.
+
+        > **⚠️ IMPORTANT:** Ensure that the image URL is either publicly accessible or [presigned](https://docs.aws.amazon.com/AmazonS3/latest/userguide/ShareObjectPreSignedURL.html) if stored privately on S3 or similar platforms. For presigned URLs, we recommend setting the signature expiry to at least 2 hours to avoid potential access errors.
+
+        ## Supported URLs
+
+        We support direct URLs to image resources only.
+
+        If the URL cannot be parsed as an image, the endpoint will return a status code of `400`.
+      summary: Enhance an image from URL
+      tags:
+      - images
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UrlImageEnhancement'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UrlImageEnhancement'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UrlImageEnhancement'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+          description: ''
+        '402':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnhancedImageUrl'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthenticatedError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+          description: ''
+  /api/jobs/:
+    get:
+      operationId: jobs_list
+      description: Get the list of jobs. You can know when the job is finished by
+        checking it's `status` attribute. Once the job is completed, the previously
+        `null` `output_video` attribute will be populated with the enhanced video
+        metadata.
+      summary: List jobs
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - jobs
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedJobList'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthenticatedError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+          description: ''
+    post:
+      operationId: jobs_create
+      description: |-
+        Enhance the uploaded video. To upload the video, use the [upload videos endpoint](https://backend.tensorpix.ai/api/schema/redoc/#tag/videos/operation/videos_create). After the video is uploaded, use this endpoint to start the video enhancing job. Make sure to set the `input_video` attribute to the uploaded video's ID which is returned in the response of the [upload videos endpoint](https://backend.tensorpix.ai/api/schema/redoc/#tag/videos/operation/videos_create).
+
+
+        ## AI filters
+
+        AI filters are called `ml-models` in the API docs as they are actually machine learning
+        models.
+
+        See the `/api/ml-models` to learn more about ML models selection. After choosing the appropriate models, pass the list of their IDs in the `ml_models` parameter. You should pass at least one AI filter.
+
+        ## Free Preview Jobs
+
+        Free Previews will process a short segment of the video (10sec) and won't cost any 🪙 Credits. To enable Free Previews in a job, set the `preview = True`.
+
+        You can use the `start_frame` to set the starting frame of the Free Preview segment.
+        `end_frame` parameter is ignored if `preview = True`.
+
+        ## Enhancing specific video segments
+
+        To process a whole video, don't specify `start_frame` and `end_frame` and set
+        `preview = False`.
+
+        To process a specific video segment, set the `start_frame` to the starting frame of the
+          segment, and `end_frame` to the end frame of the segment. `end_frame` must
+          be > `start_frame`.
+
+        ## Stabilization
+
+        `stabilization_smoothing` parameter is ignored unless the AI Stabilization Filter is set as
+        one of the ML models.
+
+        ## Sharpening
+
+        `sharpen_strength` parameter is ignored unless the AI Sharpen Filter is set as
+        one of the ML models.
+
+        ## Post enhancing clean-up
+
+        > **⚠️ IMPORTANT**: Your account will be limited by the total storage of all enhanced and uploaded videos. While this limit will be set to a high number (1TB+), we highly recommend you delete the enhanced video after the enhanced video is copied to your server. This ensures you won't run into storage limit errors in the future.
+      summary: Enhance uploaded video
+      tags:
+      - jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateJob'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateJob'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateJob'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateJob'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthenticatedError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+          description: ''
+  /api/jobs/{id}/:
+    get:
+      operationId: jobs_retrieve
+      description: |-
+        Get the job. You can know when the job is finished by checking it's status attribute. Once the job is completed, the previously `null` `output_video` attribute will be populated with the enhanced video metadata.
+
+
+        > **ℹ️ NOTE**: Jobs can sometimes be in `IN_QUEUE` status for a few minutes. This happens when we're spinning up new GPU instances to cover the requests demand.
+      summary: Get job details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - jobs
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthenticatedError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+          description: ''
+    delete:
+      operationId: jobs_destroy
+      description: |-
+        Stops the job if it's processing. The job status becomes cancelled and the job stops
+        executing.
+
+        If the job is currently processing and then cancelled, most of the 🪙 Credits will be refunded.
+
+        ## Error codes
+
+        `409` code if the job has already been canceled.
+
+        `500` code if we fail to cancel the job. The job isn't cancelled in this case.
+      summary: Stop the job
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - jobs
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+          description: ''
+        '204':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthenticatedError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+          description: ''
+  /api/jobs/from-url/:
+    post:
+      operationId: jobs_from_url_create
+      description: |-
+        Starts a job that enhances a video hosted on an publicly accessible  URL,
+
+        for example: https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4
+
+        If your videos are stored on S3 or another provider, you can directly start the enhancement job using this endpoint without needing to upload the video first.
+
+        > **⚠️ IMPORTANT:** Ensure that the video URL is either publicly accessible or [presigned](https://docs.aws.amazon.com/AmazonS3/latest/userguide/ShareObjectPreSignedURL.html) if stored privately on S3 or similar platforms. For presigned URLs, we recommend setting the signature expiry to at least 2 hours to avoid potential job failures.
+
+        ## Supported URLs
+
+        We support direct URLs to video resources only. Third-party hosting platforms like YouTube, Instagram, Vimeo, or TikTok are not supported.
+
+        If the URL cannot be parsed as a video, the endpoint will return a status code of `400`.
+
+        > **⚠️ IMPORTANT**: Your account will be limited by the total storage of all enhanced and uploaded videos. While this limit will be set to a high number (1TB+), we highly recommend you delete the enhanced video after the enhanced video is copied to your server. This ensures you won't run into storage limit errors in the future.
+      summary: Enhance a video from URL
+      tags:
+      - jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnhanceVideo'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EnhanceVideo'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EnhanceVideo'
+        required: true
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+          description: ''
+        '402':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnhanceJobResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthenticatedError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+          description: ''
+  /api/ml-models/:
+    get:
+      operationId: ml_models_list
+      description: |-
+        The terms "AI Filters" and "ML Models" refer to the same concept.
+        - "AI Filter" is a more user-friendly term often used in user interfaces.
+        - "ML Model" is commonly found in technical documentation such as API references.
+
+        Each ML model belongs to one task. E.g. `200% AI Upscale` would belong to a `Super Resolution` task group. When selecting models for a video, one can only select one ML model per task group.
+
+        Visit the the [Help Center](https://help.tensorpix.ai/en/collections/5832762-ai-filters) for more detailed information about each ML model and its capabilities.
+      summary: List available AI Filters (ML models)
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - ml-models
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMLModelListList'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthenticatedError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+          description: ''
+  /api/restored-videos/:
+    get:
+      operationId: restored_videos_list
+      summary: List enhanced videos
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - restored-videos
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRestoredVideoList'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthenticatedError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+          description: ''
+  /api/restored-videos/{id}/:
+    get:
+      operationId: restored_videos_retrieve
+      summary: Get enhanced video details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - restored-videos
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestoredVideo'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthenticatedError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+          description: ''
+    delete:
+      operationId: restored_videos_destroy
+      summary: Delete enhanced video
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - restored-videos
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthenticatedError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+          description: ''
+  /api/videos/:
+    get:
+      operationId: videos_list
+      description: |-
+        List all manually uploaded videos. Videos that were implicitly uploaded using the
+        `/jobs/from-url/` endpoint are not included in this list.
+      summary: List manually uploaded videos
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - videos
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedVideoList'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthenticatedError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+          description: ''
+    post:
+      operationId: videos_create
+      description: |-
+        Upload a video from your local device. If the upload is successful, a 201 Created status code is returned along with the video's ID and metadata.
+
+        > **⚠️ IMPORTANT:** The video is not yet ready for enhancement when this endpoint returns 201 Created. This is because the video is still being uploaded to the cloud storage. After uploading the video, follow these steps to ensure the video is fully uploaded and ready for enhancement:
+        >
+        > Poll for video's status:
+        > - Use the [`get uploaded video`](https://backend.tensorpix.ai/api/schema/redoc/#tag/videos/operation/videos_retrieve) endpoint to check the status of the video.
+        > - Poll this endpoint periodically to check the `file` field in the response.
+        >
+        > Checking the `file` Field:
+        > - If the file field is `null`, the video is still being prepared.
+        > - Once the file field contains a URL, the video is ready for further processing and enhancement.
+      summary: Manually upload videos
+      tags:
+      - videos
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Video'
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Video'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthenticatedError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+          description: ''
+  /api/videos/{id}/:
+    get:
+      operationId: videos_retrieve
+      summary: Get uploaded video
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - videos
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Video'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthenticatedError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+          description: ''
+    delete:
+      operationId: videos_destroy
+      description: |-
+        Deletes the uploaded video.
+
+        > **⚠️ IMPORTANT:** If the video is currently being used in an active job, the endpoint will return a 409 Conflict status code.
+        >
+        > To delete the video in this case, you have two options:
+        > 1. Wait for the job to complete and then delete the video.
+        > 2. Stop the job that's currently using the video and then delete the video.
+      summary: Delete uploaded video
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - videos
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+          description: ''
+        '204':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthenticatedError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+          description: ''
+components:
+  schemas:
+    BlankEnum:
+      enum:
+      - ''
+    ChromaSubsamplingEnum:
+      enum:
+      - yuv420p
+      - yuv422p
+      - yuv444p
+      - yuv420p10le
+      - yuv422p10le
+      - yuv444p10le
+      type: string
+      description: |-
+        * `yuv420p` - 8-bit 4:2:0
+        * `yuv422p` - 8-bit 4:2:2
+        * `yuv444p` - 8-bit 4:4:4
+        * `yuv420p10le` - 10-bit 4:2:0
+        * `yuv422p10le` - 10-bit 4:2:2
+        * `yuv444p10le` - 10-bit 4:4:4
+    CodecEnum:
+      enum:
+      - libx264
+      - libx265
+      - prores_ks
+      type: string
+      description: |-
+        * `libx264` - H264
+        * `libx265` - HEVC/H265
+        * `prores_ks` - Apple ProRes
+    ContainerEnum:
+      enum:
+      - mov
+      - mkv
+      - mp4
+      type: string
+      description: |-
+        * `mov` - Mov
+        * `mkv` - Mkv
+        * `mp4` - Mp4
+    CreateJob:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        codec:
+          allOf:
+          - $ref: '#/components/schemas/CodecEnum'
+          description: |-
+            Codec used for the Enhanced video.
+
+            * `libx264` - H264
+            * `libx265` - HEVC/H265
+            * `prores_ks` - Apple ProRes
+        crf:
+          type: integer
+          maximum: 51
+          minimum: 0
+          description: 'Constant Rate Factor (CRF) is encoding quality of the output
+            video. 23 is a good starting value. Set to 20 or lower if you need very
+            high quality encoding (increased file size), or higher than 25 if quality
+            is not paramount (smaller file size). [Learn more about CRF](https://trac.ffmpeg.org/wiki/Encode/H.264#crf). '
+        qscale:
+          type: integer
+          maximum: 32
+          minimum: 0
+          description: Represents the `qscale` parameter in ffmpeg. Used with ProRes
+            codec. Set the value between 9 and 13 for optimal results. [Learn more
+            about Qscale](https://trac.ffmpeg.org/wiki/Encode/VFX#Prores)
+        container:
+          allOf:
+          - $ref: '#/components/schemas/ContainerEnum'
+          description: |-
+            Container format of the Enhanced video.
+
+            * `mov` - Mov
+            * `mkv` - Mkv
+            * `mp4` - Mp4
+        chroma_subsampling:
+          oneOf:
+          - $ref: '#/components/schemas/ChromaSubsamplingEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        preview:
+          type: boolean
+          description: Flag which denotes if job is free preview job or not. Free
+            preview jobs are not charged but the output video is watermarked and only
+            a short video segment is enhanced.
+        start_frame:
+          type:
+          - integer
+          - 'null'
+          maximum: 2147483647
+          minimum: 0
+          description: Cuts the video starting from this frame before enhancing it.
+        end_frame:
+          type:
+          - integer
+          - 'null'
+          maximum: 2147483647
+          minimum: 1
+          description: Cuts the video ending on this frame before enhancing it.
+        input_video:
+          type:
+          - integer
+          - 'null'
+        output_video:
+          type:
+          - integer
+          - 'null'
+          description: Once the job is finished, the `output_video` attribute will
+            be populated with the enhanced video metadata. If the job is canceled
+            or it fails, the output_video attribute will remain null.
+        owner:
+          type: string
+          format: email
+          title: Email address
+          readOnly: true
+        ml_models:
+          type: array
+          items:
+            type: integer
+        output_resolution:
+          allOf:
+          - $ref: '#/components/schemas/OutputResolutionEnum'
+          minimum: -2147483648
+          maximum: 2147483647
+        grain:
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0
+          description: Grain amount to add to the enhanced video in range [0, 1].
+            0 is default.
+        comparison:
+          type: boolean
+          description: Flag which denotes if the output video will be side by side
+            video of the original and enhanced video.
+        stabilization_smoothing:
+          type: integer
+          maximum: 40
+          minimum: 0
+          description: If AI Stabilization filter is enabled, this parameter controls
+            the intensity of stabilization. Ignored if AI Stabilization is disabled.
+            Use higher values for very shaky videos, and lower strength for less shaky
+            videos. Video may be zoomed in if the video is very shaky.
+        target_fps:
+          type: number
+          format: double
+          maximum: 240
+          minimum: 1
+          description: 'Target FPS for the enhanced video. If not provided, the original
+            FPS will be used. If provided, should be greater than or equal to the
+            original FPS. If lower, it will be set to the original FPS. **IMPORTANT**:
+            Won''t be applied if the FPS BOOST model isn''t passed in `ml_models.`'
+        playback_speed:
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0.1
+          description: 'Playback speed of the video. 1.0 means the video will play
+            at normal speed. 0.5 means the video will play at half speed with AI interpolated
+            frames in between. **IMPORTANT**: Won''t be applied if the SLOW MOTION
+            model isn''s passed in `ml_models.`'
+        sharpen_strength:
+          type: number
+          format: double
+          maximum: 10
+          minimum: 0
+          description: If AI Sharpen filter is enabled, this parameter controls the
+            intensity of sharpening. Ignored if AI Sharpen filter is disabled.
+        cost_usd:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,4})?$
+          readOnly: true
+          description: Job cost in 🪙 Credits.
+        prores_profile:
+          allOf:
+          - $ref: '#/components/schemas/ProresProfileEnum'
+          minimum: -2147483648
+          maximum: 2147483647
+      required:
+      - cost_usd
+      - id
+      - ml_models
+      - owner
+    CreditsBalance:
+      type: object
+      properties:
+        balance_usd:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,4})?$
+    EnhanceJobResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        cost_usd:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,4})?$
+          description: Job cost in 🪙 Credits.
+        input_video:
+          type:
+          - integer
+          - 'null'
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          description: |-
+            Job's status
+
+            * `0` - In Queue
+            * `1` - Processing
+            * `2` - Finished
+            * `-1` - Failed
+            * `-2` - Canceled
+          minimum: -2147483648
+          maximum: 2147483647
+      required:
+      - cost_usd
+      - id
+    EnhanceVideo:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        codec:
+          allOf:
+          - $ref: '#/components/schemas/CodecEnum'
+          description: |-
+            Codec used for the Enhanced video.
+
+            * `libx264` - H264
+            * `libx265` - HEVC/H265
+            * `prores_ks` - Apple ProRes
+        crf:
+          type: integer
+          maximum: 51
+          minimum: 0
+          description: 'Constant Rate Factor (CRF) is encoding quality of the output
+            video. 23 is a good starting value. Set to 20 or lower if you need very
+            high quality encoding (increased file size), or higher than 25 if quality
+            is not paramount (smaller file size). [Learn more about CRF](https://trac.ffmpeg.org/wiki/Encode/H.264#crf). '
+        container:
+          allOf:
+          - $ref: '#/components/schemas/ContainerEnum'
+          description: |-
+            Container format of the Enhanced video.
+
+            * `mov` - Mov
+            * `mkv` - Mkv
+            * `mp4` - Mp4
+        chroma_subsampling:
+          oneOf:
+          - $ref: '#/components/schemas/ChromaSubsamplingEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        video_url:
+          type: string
+          format: uri
+          description: 'Video URL. The URL must be accessible. Example: https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4'
+          maxLength: 2048
+          minLength: 1
+        ml_models:
+          type: array
+          items:
+            type: integer
+        output_resolution:
+          allOf:
+          - $ref: '#/components/schemas/OutputResolutionEnum'
+          minimum: -2147483648
+          maximum: 2147483647
+        grain:
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0
+          description: Grain amount to add to the enhanced video in range [0, 1].
+            0 is default.
+        input_video:
+          type:
+          - integer
+          - 'null'
+          readOnly: true
+        comparison:
+          type: boolean
+          description: Flag which denotes if the output video will be side by side
+            video of the original and enhanced video.
+        stabilization_smoothing:
+          type: integer
+          maximum: 40
+          minimum: 0
+          description: If AI Stabilization filter is enabled, this parameter controls
+            the intensity of stabilization. Ignored if AI Stabilization is disabled.
+            Use higher values for very shaky videos, and lower strength for less shaky
+            videos. Video may be zoomed in if the video is very shaky.
+        target_fps:
+          type: number
+          format: double
+          maximum: 240
+          minimum: 1
+          description: 'Target FPS for the enhanced video. If not provided, the original
+            FPS will be used. If provided, should be greater than or equal to the
+            original FPS. If lower, it will be set to the original FPS. **IMPORTANT**:
+            Won''t be applied if the FPS BOOST model isn''t passed in `ml_models.`'
+        playback_speed:
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0.1
+          description: 'Playback speed of the video. 1.0 means the video will play
+            at normal speed. 0.5 means the video will play at half speed with AI interpolated
+            frames in between. **IMPORTANT**: Won''t be applied if the SLOW MOTION
+            model isn''s passed in `ml_models.`'
+        sharpen_strength:
+          type: number
+          format: double
+          maximum: 10
+          minimum: 0
+          description: If AI Sharpen filter is enabled, this parameter controls the
+            intensity of sharpening. Ignored if AI Sharpen filter is disabled.
+        cost_usd:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,4})?$
+          readOnly: true
+          description: Job cost in 🪙 Credits.
+        preview:
+          type: boolean
+          default: false
+        start_frame:
+          type:
+          - integer
+          - 'null'
+          maximum: 2147483647
+          minimum: 0
+          description: Cuts the video starting from this frame before enhancing it.
+        end_frame:
+          type:
+          - integer
+          - 'null'
+          maximum: 2147483647
+          minimum: 1
+          description: Cuts the video ending on this frame before enhancing it.
+      required:
+      - cost_usd
+      - id
+      - input_video
+      - ml_models
+      - video_url
+    EnhancedImage:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: Media name
+          maxLength: 1024
+        original_image:
+          type: integer
+        width:
+          type:
+          - integer
+          - 'null'
+          maximum: 16384
+          minimum: 32
+          description: Width in pixels of the image.
+        height:
+          type:
+          - integer
+          - 'null'
+          maximum: 16384
+          minimum: 32
+          description: Height in pixels of the image.
+        size:
+          type:
+          - integer
+          - 'null'
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          description: Size of the media in bytes
+        file:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: URL to the image file.
+        owner:
+          type: string
+          format: email
+          title: Email address
+          readOnly: true
+          description: Email of the user who enhanced the image.
+        thumbnail:
+          type: string
+          format: uri
+          readOnly: true
+          description: URL to a thumbnail of the enhanced image.
+      required:
+      - id
+      - name
+      - original_image
+      - owner
+      - thumbnail
+    EnhancedImageUrl:
+      type: object
+      properties:
+        enhanced_url:
+          type: string
+          format: uri
+          description: 'Enhanced Image URL. Be aware the URL can expire. List enhanced
+            images to get new URLs. Example: https://yoursite/imagename.jpg'
+        enhanced_img_id:
+          type: string
+          description: Enhanced image ID
+      required:
+      - enhanced_img_id
+      - enhanced_url
+    ForbiddenError:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    GenericError:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    Job:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        started:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Job's start time
+        preview:
+          type: boolean
+          readOnly: true
+          description: Flag which denotes if job is free preview job or not. Free
+            preview jobs are not charged but the output video is watermarked and only
+            a short video segment is enhanced.
+        description:
+          type: string
+          readOnly: true
+          description: Job description
+        cost_usd:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,4})?$
+          readOnly: true
+          description: Job cost in 🪙 Credits.
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
+          description: |-
+            Job's status
+
+            * `0` - In Queue
+            * `1` - Processing
+            * `2` - Finished
+            * `-1` - Failed
+            * `-2` - Canceled
+        eta_s:
+          type: number
+          format: double
+          readOnly: true
+          description: Job's estimated time of arrival in seconds. ETA is only an
+            approximation and it can flactuate a lot. ETA is usually more accurate
+            when the job is longer and has been running for a while.
+        finished:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+          description: Job's finished time
+        processing_progress:
+          type: number
+          format: double
+          readOnly: true
+          description: Job's progress ratio in the range [0, 1].
+        input_video:
+          allOf:
+          - $ref: '#/components/schemas/Video'
+          readOnly: true
+        output_video:
+          allOf:
+          - $ref: '#/components/schemas/RestoredVideo'
+          readOnly: true
+        ml_models:
+          type: array
+          items:
+            $ref: '#/components/schemas/MLModelList'
+          readOnly: true
+        grain:
+          type: number
+          format: double
+          readOnly: true
+          description: Grain amount to add to the enhanced video in range [0, 1].
+            0 is default.
+        codec:
+          allOf:
+          - $ref: '#/components/schemas/CodecEnum'
+          readOnly: true
+          description: |-
+            Codec used for the Enhanced video.
+
+            * `libx264` - H264
+            * `libx265` - HEVC/H265
+            * `prores_ks` - Apple ProRes
+        output_resolution:
+          allOf:
+          - $ref: '#/components/schemas/OutputResolutionEnum'
+          readOnly: true
+        comparison:
+          type: boolean
+          readOnly: true
+          description: Flag which denotes if the output video will be side by side
+            video of the original and enhanced video.
+        stabilization_smoothing:
+          type: integer
+          readOnly: true
+          description: If AI Stabilization filter is enabled, this parameter controls
+            the intensity of stabilization. Ignored if AI Stabilization is disabled.
+            Use higher values for very shaky videos, and lower strength for less shaky
+            videos. Video may be zoomed in if the video is very shaky.
+        fps_interpolation_factor:
+          type: number
+          format: double
+          readOnly: true
+          description: 'Framerate interpolation factor. E.g. 1.5 means the video will
+            have 1.5x the AI interpolated framerate. 1.0 means the framerate will
+            not be changed. **IMPORTANT**: Won''t be applied if the FPS BOOST model
+            isn''t passed in `ml_models.`'
+        playback_speed:
+          type: number
+          format: double
+          readOnly: true
+          description: 'Playback speed of the video. 1.0 means the video will play
+            at normal speed. 0.5 means the video will play at half speed with AI interpolated
+            frames in between. **IMPORTANT**: Won''t be applied if the SLOW MOTION
+            model isn''s passed in `ml_models.`'
+        sharpen_strength:
+          type: number
+          format: double
+          readOnly: true
+          description: If AI Sharpen filter is enabled, this parameter controls the
+            intensity of sharpening. Ignored if AI Sharpen filter is disabled.
+        start_frame:
+          type:
+          - integer
+          - 'null'
+          readOnly: true
+          description: Cuts the video starting from this frame before enhancing it.
+        end_frame:
+          type:
+          - integer
+          - 'null'
+          readOnly: true
+          description: Cuts the video ending on this frame before enhancing it.
+      required:
+      - codec
+      - comparison
+      - cost_usd
+      - description
+      - end_frame
+      - eta_s
+      - finished
+      - fps_interpolation_factor
+      - grain
+      - id
+      - input_video
+      - ml_models
+      - output_resolution
+      - output_video
+      - playback_speed
+      - preview
+      - processing_progress
+      - sharpen_strength
+      - stabilization_smoothing
+      - start_frame
+      - started
+      - status
+    MLModelList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+          description: Model name
+        task:
+          allOf:
+          - $ref: '#/components/schemas/TaskEnum'
+          readOnly: true
+          description: |-
+            Task (filter) used for video enhancement.
+
+            * `1` - Super Resolution
+            * `2` - Film damage
+            * `3` - Denoise
+            * `4` - Sharpen
+            * `5` - VHS Prettify
+            * `6` - Dropouts Buster
+            * `7` - Auto Color Balance
+            * `8` - Decompressor
+            * `9` - Deinterlace
+            * `10` - FPS Interpolation
+            * `11` - Slow Motion
+            * `12` - Face Enhance
+            * `13` - Stabilization
+            * `14` - Audio Denoise
+            * `15` - Low Light Enhance
+        cost_weight:
+          type: number
+          format: double
+          readOnly: true
+          description: Model's impact on the job cost. The higher the weight, the
+            more the job will cost if this model is used.
+        upscale_factor:
+          type: integer
+          readOnly: true
+          description: Video upscale factor. E.g. 2 means the 512x512 px video becomes
+            1024x1024 px. Ignored if the Super Resolution model is not present.
+        fps_boost_factor:
+          type: integer
+          readOnly: true
+          description: DEPRECATED. See Job's `fps_interpolation_factor`. How much
+            the video framerate will be increased. Ignored if the framerate interpolation
+            model is not present.
+        priority:
+          type: integer
+          readOnly: true
+          description: ML model execution priority. Used internally to determine the
+            order of models execution. Lower value means earlier execution.
+        max_resolution:
+          type: integer
+          readOnly: true
+          description: Maximum input video resolution the ML model supports (in pixels).
+            E.g. 4X upscale models don't support input video resolutions higher than
+            1280x720 px.
+      required:
+      - cost_weight
+      - fps_boost_factor
+      - id
+      - max_resolution
+      - name
+      - priority
+      - task
+      - upscale_factor
+    NotFoundError:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    OutputResolutionEnum:
+      enum:
+      - -1
+      - 640
+      - 720
+      - 854
+      - 1280
+      - 1920
+      - 2048
+      - 2560
+      - 3840
+      type: integer
+      description: |-
+        * `-1` - No Resize
+        * `640` - 360p
+        * `720` - SD
+        * `854` - HQ
+        * `1280` - 720p
+        * `1920` - 1080p
+        * `2048` - 2K
+        * `2560` - QHD
+        * `3840` - 4K
+    PaginatedEnhancedImageList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnhancedImage'
+    PaginatedJobList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Job'
+    PaginatedMLModelListList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/MLModelList'
+    PaginatedRestoredVideoList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RestoredVideo'
+    PaginatedVideoList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Video'
+    PreviewVideosSerialiazer:
+      type: object
+      properties:
+        before_video:
+          type:
+          - string
+          - 'null'
+          format: uri
+          readOnly: true
+          description: Before video
+        after_video:
+          type:
+          - string
+          - 'null'
+          format: uri
+          readOnly: true
+          description: After video
+      required:
+      - after_video
+      - before_video
+    ProresProfileEnum:
+      enum:
+      - -1
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      type: integer
+      description: |-
+        * `-1` - Auto
+        * `0` - Proxy
+        * `1` - Lt
+        * `2` - Standard
+        * `3` - Hq
+        * `4` - V4444
+        * `5` - V4444Xq
+    RateLimitError:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    RestoredVideo:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        job_id:
+          type:
+          - integer
+          - 'null'
+          readOnly: true
+        preview_videos:
+          $ref: '#/components/schemas/PreviewVideosSerialiazer'
+        name:
+          type: string
+          description: Media name
+          maxLength: 1024
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Date when the media was created
+        deleted:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Datetime when the media was deleted. Null if not deleted.
+        framerate:
+          type:
+          - number
+          - 'null'
+          format: double
+          maximum: 1000
+          minimum: 0
+          description: Video framerate in frames per second
+        n_frames:
+          type:
+          - integer
+          - 'null'
+          maximum: 2147483647
+          minimum: 1
+          description: Number of frames in the video
+        bitrate:
+          type:
+          - integer
+          - 'null'
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          description: Video bitrate in bits per second
+        codec_id:
+          type:
+          - string
+          - 'null'
+        bit_depth:
+          type:
+          - integer
+          - 'null'
+          maximum: 30
+          minimum: 1
+          description: Bit depth of the video
+        chroma_subsampling:
+          type:
+          - string
+          - 'null'
+        color_space:
+          type:
+          - string
+          - 'null'
+        size:
+          type:
+          - integer
+          - 'null'
+          maximum: 400000000000
+          minimum: 100
+          format: int64
+          description: Size of the video in bytes
+        file:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: Pre-signed uploaded video URL. The URL may expire after some
+            time. To generate a new URL, call the endpoint again. If the field is
+            `null`, it means the video hasn't been completely uploaded to our servers
+            yet. The field can also be `null` if the video was enhanced using the
+            /jobs/from-url endpoint. In that case the video is not stored on our servers
+            and the field is `null`
+        thumbnail:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: Thumbnail of the video. `null` if the video was enhanced with
+            the /jobs/from-url endpoint
+        width:
+          type: integer
+          maximum: 8192
+          minimum: 64
+        height:
+          type: integer
+          maximum: 8192
+          minimum: 64
+        quality_score:
+          type:
+          - integer
+          - 'null'
+          maximum: 5
+          minimum: 1
+          description: User rated quality score of the enhanced video. 1 is the worst,
+            5 the best. Null if the video is not rated yet.
+        owner:
+          type: integer
+          description: User who owns this media
+      required:
+      - created_at
+      - height
+      - id
+      - job_id
+      - name
+      - owner
+      - preview_videos
+      - width
+    StatusEnum:
+      enum:
+      - 0
+      - 1
+      - 2
+      - -1
+      - -2
+      type: integer
+      description: |-
+        * `0` - In Queue
+        * `1` - Processing
+        * `2` - Finished
+        * `-1` - Failed
+        * `-2` - Canceled
+    TaskEnum:
+      enum:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      - 7
+      - 8
+      - 9
+      - 10
+      - 11
+      - 12
+      - 13
+      - 14
+      - 15
+      type: integer
+      description: |-
+        * `1` - Super Resolution
+        * `2` - Film damage
+        * `3` - Denoise
+        * `4` - Sharpen
+        * `5` - VHS Prettify
+        * `6` - Dropouts Buster
+        * `7` - Auto Color Balance
+        * `8` - Decompressor
+        * `9` - Deinterlace
+        * `10` - FPS Interpolation
+        * `11` - Slow Motion
+        * `12` - Face Enhance
+        * `13` - Stabilization
+        * `14` - Audio Denoise
+        * `15` - Low Light Enhance
+    UnauthenticatedError:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    UrlImageEnhancement:
+      type: object
+      properties:
+        output_format:
+          type: string
+          description: 'Output image format. Possible values are: jpeg, png, webp.'
+          maxLength: 10
+        enhancement_type:
+          type: string
+          description: 'Type of image enhancement. Possible values are: underwaterCC,
+            denoise, sr2x, sr4x, faceEnhance.'
+          maxLength: 50
+        face_enhance:
+          type: boolean
+          description: Flag which enables or disables the Face Enhancer model.
+        watermark:
+          type: boolean
+          description: Flag which denotes if the watermark will be added on the image.
+            If enabled, the processing wont't deduct any Credits. Your account can
+            process a limited number of watermarked images per day. See pricing for
+            more details
+        url:
+          type: string
+          format: uri
+          description: 'URL of the to be enhanced image. The URL must be accessible.
+            Example: https://dummyimage.com/600x400/000/fff'
+          maxLength: 1000
+          minLength: 5
+      required:
+      - enhancement_type
+      - face_enhance
+      - output_format
+      - url
+      - watermark
+    ValidationError:
+      type: object
+      properties:
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+        non_field_errors:
+          type: array
+          items:
+            type: string
+      required:
+      - errors
+      - non_field_errors
+    Video:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+          description: Media name
+        width:
+          type:
+          - integer
+          - 'null'
+          readOnly: true
+          description: Width of the video in pixels
+        height:
+          type:
+          - integer
+          - 'null'
+          readOnly: true
+          description: Height of the video in pixels
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Date when the media was created
+        n_frames:
+          type:
+          - integer
+          - 'null'
+          readOnly: true
+          description: Number of frames in the video
+        framerate:
+          type:
+          - number
+          - 'null'
+          format: double
+          readOnly: true
+          description: Video framerate in frames per second
+        size:
+          type:
+          - integer
+          - 'null'
+          readOnly: true
+          description: Size of the video in bytes
+        file:
+          type:
+          - string
+          - 'null'
+          format: uri
+          description: Pre-signed uploaded video URL. The URL may expire after some
+            time. To generate a new URL, call the endpoint again. If the field is
+            `null`, it means the video hasn't been completely uploaded to our servers
+            yet. The field can also be `null` if the video was enhanced using the
+            /jobs/from-url endpoint. In that case the video is not stored on our servers
+            and the field is `null`
+        owner:
+          type: string
+          format: email
+          title: Email address
+          readOnly: true
+        thumbnail:
+          type:
+          - string
+          - 'null'
+          format: uri
+          readOnly: true
+          description: Thumbnail of the video. `null` if the video was enhanced with
+            the /jobs/from-url endpoint
+        external_url:
+          type:
+          - string
+          - 'null'
+          format: uri
+          readOnly: true
+        bitrate:
+          type:
+          - integer
+          - 'null'
+          readOnly: true
+          description: Video bitrate in bits per second
+        codec_id:
+          type:
+          - string
+          - 'null'
+          readOnly: true
+        bit_depth:
+          type:
+          - integer
+          - 'null'
+          readOnly: true
+          description: Bit depth of the video
+        chroma_subsampling:
+          type:
+          - string
+          - 'null'
+          readOnly: true
+        color_space:
+          type:
+          - string
+          - 'null'
+          readOnly: true
+      required:
+      - bit_depth
+      - bitrate
+      - chroma_subsampling
+      - codec_id
+      - color_space
+      - created_at
+      - external_url
+      - framerate
+      - height
+      - id
+      - n_frames
+      - name
+      - owner
+      - size
+      - thumbnail
+      - width
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"
+servers:
+- url: https://backend.tensorpix.ai
+externalDocs:
+  url: https:/docs.tensorpix.ai
+  description: Checkout the full TensorPix documentation.
