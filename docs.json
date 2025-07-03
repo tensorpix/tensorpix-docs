@@ -3,11 +3,33 @@
   "theme": "mint",
   "name": "TensorPix API docs",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#0072F6",
+    "light": "#00FFC2",
+    "dark": "#18191D"
   },
   "favicon": "/favicon.ico",
+  "api": {
+   "playground": {
+     "display": "interactive"
+   },
+   "examples": {
+     "defaults": "all"
+   }
+ },
+ "seo": {
+    "metatags": {
+        "title": "Video and Image Upscaling API | TensorPix",
+        "description": "TensorPix is a powerful API for video and image upscaling, enhancing quality with advanced AI models. Perfect for developers and businesses looking to improve visual content.",
+        "charset": "UTF-8",
+        "viewport": "width=device-width, initial-scale=1.0",
+        "language": "en",
+        "og:title": "Video and Image Upscaling API | TensorPix",
+        "og:type": "website",
+        "og:url": "https://docs.tensorpix.ai",
+        "og:description": "TensorPix is a powerful API for video and image upscaling, enhancing quality with advanced AI models. Perfect for developers and businesses looking to improve visual content.",
+        "og:site_name": "Video and Image Upscaling API | TensorPix"
+    }
+},
   "navigation": {
     "tabs": [
       {
@@ -17,19 +39,23 @@
             "group": "Get Started",
             "pages": [
               "index",
-              "quickstart",
-              "development"
+              "quickstart"
             ]
           },
           {
             "group": "Essentials",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/settings",
-              "essentials/navigation",
-              "essentials/reusable-snippets"
+              "/essentials/authentication",
+              "/essentials/storage",
+              "/essentials/credits",
+              "/essentials/parallel-processing"
+            ]
+          },
+          {
+            "group": "Recipes",
+            "pages": [
+              "/recipes/video-enhancing",
+              "/recipes/image-enhancing"
             ]
           }
         ]
@@ -40,7 +66,7 @@
           {
           "group": "Endpoints",
           "openapi": {
-            "source": "https://backend.tensorpix.ai/api/schema/",
+            "source": "https://staging.backend.tensorpix.ai/api/schema/",
             "directory": "api-reference"
             }
           }
@@ -63,12 +89,12 @@
           "anchor": "Blog",
           "href": "https://tensorpix.ai/blog",
           "icon": "newspaper"
-        }
+        },
         {
           "anchor": "Web Application",
           "href": "https://app.tensorpix.ai",
           "icon": "globe"
-        },
+        }
       ]
     }
   },
