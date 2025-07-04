@@ -1,0 +1,70 @@
+---
+title: 'Video Enhancing Recipes'
+description: 'Quickly get started by copying one of the video enhancing recipes.'
+icon: 'play'
+---
+
+## Enhancing video from URL
+
+<Warning> Make sure the URL is publicly accessible and points to a video file. Example: `https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4`</Warning>
+
+### Python
+
+```py
+import requests
+import time
+
+API_KEY = "YOUR API KEY"
+BASE_URL = "https://backend.tensorpix.ai/api"
+STATUS_CHECK_INTERVAL = 10
+HEADERS = {"Authorization": f"Token {API_KEY}"}
+
+def start_video_enhancement(video_url: str, ml_models: list[int]) -> dict:
+    data = {
+        "codec": "libx264",
+        "crf": 23,
+        "container": "mp4",
+        "chroma_subsampling": "yuv420p",
+        "video_url": video_url,
+        "ml_models": ml_models,
+        "output_resolution": -1,
+        "grain": 0,
+        "stabilization_smoothing": 0,
+    }
+    response = requests.post(url=f"{BASE_URL}/jobs/from-url/", headers=HEADERS, data=data)
+    response.raise_for_status()
+    return response.json()
+
+def wait_for_job_finish(job_id: int) -> dict:
+    while True:
+        time.sleep(STATUS_CHECK_INTERVAL)
+        job_data = requests.get(url=f"{BASE_URL}/jobs/{job_id}/", headers=HEADERS).json()
+        status = job_data["status"]
+        if status == 0:
+            print("Job is in queue")
+        elif status == 1:
+            print(f"Progress {(job_data['processing_progress'] * 100):.2f}%")
+        elif status == 2:
+            return job_data
+        else:
+            raise Exception("Job has failed")
+
+def remove_video(video_id):
+    requests.delete(url=f"{BASE_URL}/restored-videos/{video_id}/", headers=HEADERS)
+
+job_info = start_video_enhancement(
+    video_url="https://cdn.tensorpix.ai/videos/landing_hero_v2.mp4",
+    ml_models=[34] # List all models with `/api/ml-models/` endpoint
+)
+print(job_info)
+
+completed_job_data = wait_for_job_finish(job_info["id"])
+
+# Getting enhanced video information
+enhanced_video_url = completed_job_data["output_video"]["file"]
+print(f"Enhanced video available at: {enhanced_video_url}")
+
+# Cleaning up -- removing the enhanced video from TensorPix servers
+# remove_video(completed_job_data["output_video"]["id"])
+```
+

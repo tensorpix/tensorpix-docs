@@ -1,0 +1,43 @@
+---
+title: 'Image Enhancing Recipes'
+description: 'Quickly get started by copying one of the image enhancing recipes.'
+icon: 'image'
+---
+
+## Enhancing images from URL
+
+<Warning> Make sure the URL is publicly accessible and points to an image file. 
+Example: `https://fastly.picsum.photos/id/996/200/300.jpg?hmac=vjpTROwvLRamauR7RHTF21dxsN351pnM44SxoByue5c`</Warning>
+
+### Python
+
+```py
+import requests
+
+API_KEY = "YOUR API KEY"
+BASE_URL = "https://backend.tensorpix.ai/api"
+HEADERS = {"Authorization": f"Token {API_KEY}"}
+
+
+def make_api_call(payload, url=f"{BASE_URL}/images/enhance/from-url/"):
+    try:
+        response = requests.post(url=url, headers=HEADERS, data=payload)
+        response.raise_for_status()
+        return response.json()
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error making API call: {e}")
+        raise e
+
+
+payload = {
+    "output_format": "jpeg",
+    "enhancement_type": "sr2x",
+    "face_enhance": False,
+    "watermark": True,
+    "url": "https://dummyimage.com/600x400/000/fff",
+}
+response = make_api_call(payload=payload)
+print("Enhanced image URL", response["enhanced_url"])
+```
+

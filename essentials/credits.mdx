@@ -1,0 +1,22 @@
+---
+title: Credits
+description: "All about Credits and how they work in TensorPix"
+icon: 'coins'
+---
+
+## Basics
+
+Credits are a unit of measurement used to track your usage of the TensorPix API. Each time you enhance a video or image, it consumes a certain number of Credits.
+
+You can check the account Credit balance on the [Billing page](https://app.tensorpix.ai/billing), or using the `/api/accounts/profile/balance/` endpoint.
+
+## How to top up Credits?
+
+Each subscription plan comes with a certain number of Credits included that renews evey month. If you run out of Credits, you can top up your balance by purchasing additional Credits on the [Billing page](https://app.tensorpix.ai/billing).
+
+
+### What happens when I run out of Credits?
+
+Your requests will fail with the code `400` and an appropriate message if you do not have enough Credits to process the request.
+
+<Warning> We currently do not support automatic top-ups, so you will need to manually purchase additional Credits (or upgrade subscription plan) when you run out.</Warning>

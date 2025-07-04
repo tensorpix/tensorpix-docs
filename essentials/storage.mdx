@@ -1,0 +1,30 @@
+---
+title: 'Storage'
+description: 'Learn how media storage works in TensorPix'
+icon: 'floppy-disk'
+---
+
+When you upload video and images to TensorPix, they are stored in a secure and scalable storage system. 
+
+After the media file has finished processing, we also upload the processed media to the same storage system.
+
+## Account Storage Quota
+
+Your account has a storage quota that limits the total size of media files you can store in TensorPix.
+
+The storage quota is determned by your subscription plan. You can check your current storage usage and quota in the [Billing page](https://app.tensorpix.ai/billing).
+
+## Exceeding Storage Quota
+
+If you exceed your storage quota, you will not be able to upload new media files until you free up some space or upgrade your subscription plan.
+
+Each enhancing request will also fail with the code `400` and an appropirate message if you do not have enough storage space to store the processed media.
+
+<Warning>We strongly advise that you copy the enhanced video or image to your S3 or other storage service. 
+After copying, you should delete the enhanced media object from your TensorPix account. This limits the risk of ruuning out of storage space.</Warning>
+
+
+
+## Enhancing videos from URL
+
+If you enhance videos using the `/api/jobs/from-url`/ endpoint, the uploaded video size will not count towards your storage quota. The enhanced video will still count towards your storage quota, so make sure you have enough space to store the processed media.

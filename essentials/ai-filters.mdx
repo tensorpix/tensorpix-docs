@@ -1,0 +1,23 @@
+---
+title: 'Video AI Filters'
+description: 'Learn how to use AI filters in TensorPix to enhance your videos'
+icon: "filter"
+---
+
+## What are AI Filters?
+
+Each AI filter is a specialized Machine Learning (ML) model designed to enhance videos in a specific way. TensorPix provides a variety of AI filters that can be applied to your videos to achieve different effects, such as uspcaling, deblurring, denoising...
+
+
+## Listing filters
+
+To see which filters are available, you can call the `/api/ml-models/` endpoint. This will return a list of all available AI filters along with their details.
+
+
+## Applying filters
+
+You can apply 1 or more filters to each video. Maximum number of filters that can be applied to a single video limited by your [subscription plan](https://app.tensorpix.ai/billing).
+
+<Note>Specified order of filters is irrelevant. The system chooses the optimal order when you submit the job.</Note>
+
+<Warning>Some filters have an input video resolution limit. If you exceed the limit, the request will fail with status code `400` and an appropriate message. Resolution limit is displayed when listing filters using the `/api/ml-models/` endpoint.</Warning>

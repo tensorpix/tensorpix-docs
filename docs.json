@@ -38,21 +38,27 @@
           {
             "group": "Get Started",
             "pages": [
-              "index",
-              "quickstart"
+              "index"
             ]
           },
           {
             "group": "Essentials",
             "pages": [
               "/essentials/authentication",
-              "/essentials/storage",
               "/essentials/credits",
-              "/essentials/parallel-processing"
+              "/essentials/storage",
+              {
+                "group": "Videos",
+                "icon": "video",
+                "pages": [
+                  "/essentials/parallel-processing",
+                  "/essentials/ai-filters"
+                ]
+              }
             ]
           },
           {
-            "group": "Recipes",
+            "group": "Code Recipes",
             "pages": [
               "/recipes/video-enhancing",
               "/recipes/image-enhancing"

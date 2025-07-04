@@ -1,0 +1,27 @@
+---
+title: 'Parallel Video Processing'
+description: 'Learn how parallel video processing works in TensorPix'
+icon: forward
+---
+
+Parallel processing allows you to enhance multiple videos at once, significantly speeding up the processing time. This is especially useful when you have a large number of videos to process.
+
+
+## How does it work?
+
+When you send a video enhancement request, your video job is sent to a queue service. The queue service checks how many active jobs your subscription plan allows.
+
+If the number of active jobs is below the limit, the job is processed as soon as there is an available GPU server. If the limit is reached, the job is queued and processed when a slot becomes available.
+
+You can queue as many jobs as you like, but only a limited number of them will be processed at the same time. The number of active jobs allowed is determined by your [subscription plan](https://app.tensorpix.ai/billing).
+
+### Processing order
+
+Jobs are processed in the order they are received. It's not advised to cancel and re-submit jobs as this will further delay the queue and processing time.
+
+## GPU servers
+
+We use specialized GPU servers to process videos. We strive to provide enough of the GPU servers so users don't have to wait for their jobs to be processed. 
+However, during peak times, there might be a delay in processing your jobs if the number of active jobs exceeds the available GPU servers.
+
+Feel free to [contact us](mailto:devs@tensorpix.ai) if you experience long queue times. We are always happy to help and can provide custom solutions for your needs.
