@@ -72,7 +72,7 @@
           {
           "group": "Endpoints",
           "openapi": {
-            "source": "https://staging.backend.tensorpix.ai/api/schema/",
+            "source": "https://backend.tensorpix.ai/api/schema/",
             "directory": "api-reference"
             }
           }
