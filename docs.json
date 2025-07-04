@@ -29,7 +29,12 @@
         "og:description": "TensorPix is a powerful API for video and image upscaling, enhancing quality with advanced AI models. Perfect for developers and businesses looking to improve visual content.",
         "og:site_name": "Video and Image Upscaling API | TensorPix"
     }
-},
+ },
+  "integrations": {
+      "ga4": {
+          "measurementId": "G-CDBFNV7EB7"
+      }
+  },
   "navigation": {
     "tabs": [
       {
@@ -72,7 +77,7 @@
           {
           "group": "Endpoints",
           "openapi": {
-            "source": "https://staging.backend.tensorpix.ai/api/schema/",
+            "source": "https://backend.tensorpix.ai/api/schema/",
             "directory": "api-reference"
             }
           }
