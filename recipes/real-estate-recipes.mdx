@@ -1,10 +1,182 @@
 ---
 title: "Real Estate Recipes"
+icon: "house-building"
 ---
 
 <Warning>
-   Make sure the URL is publicly accessible and points to an image file. Example: `https://fastly.picsum.photos/id/996/200/300.jpg?hmac=vjpTROwvLRamauR7RHTF21dxsN351pnM44SxoByue5c`
+   Make sure the URL is publicly accessible and points to an image file. Example: `https://fastly.picsum.photos/id/996/200/300.jpg?hmac=vjpTROwvLRamauR7RHTF21dxsN351pnM44SxoByue5c` 
 </Warning>
+
+# Real Estate API Use
+
+## Terms
+
+An API token proves which account sends a request.
+
+A project stores the data and settings for one property video.
+
+An image asset is one image stored in a project.
+
+A shot is one scene in the final video.
+
+A job is work that runs after the API sends a response.
+
+## Base URL
+
+Use this base URL for all real estate API requests.
+
+```text
+https://backend.tensorpix.ai/api/v2/real-estate
+```
+
+Send the API token in every request.
+
+```http
+Authorization: Token API_TOKEN
+```
+
+Use `application/json` for JSON request data.
+
+Use `multipart/form-data` only for file upload requests.
+
+## Main Flow
+
+### 1. Create a project
+
+Send a project name to `POST /projects/`.
+
+```json
+{
+  "name": "12 Green Street"
+}
+```
+
+The API returns `201` and the project data.
+
+Save the `id` value as `PROJECT_ID`.
+
+The project has default video settings.
+
+Use `PATCH /projects/PROJECT_ID/` to change project data or video settings.
+
+### 2. Add images
+
+Send `POST /projects/PROJECT_ID/assets/images/` as a file upload request.
+
+Use `images` as the field name for every image file.
+
+One request can contain from 1 to 60 image files.
+
+The API returns `201` and a JSON list of image assets.
+
+Save each image asset `id` value.
+
+The API does not create shots during this request.
+
+### 3. Create shots
+
+Send the image asset IDs to `POST /projects/PROJECT_ID/shot-batches/`.
+
+```json
+{
+  "image_asset_ids": [
+    "IMAGE_ASSET_ID_1",
+    "IMAGE_ASSET_ID_2"
+  ]
+}
+```
+
+The list order sets the shot order.
+
+The API returns `201` and a JSON list of shots.
+
+The API starts image study work for each shot.
+
+The client does not need to wait for that work before the next step.
+
+### 4. Check the project
+
+Send `GET /projects/PROJECT_ID/`.
+
+Read `ready_for_generation` from the response.
+
+Start video work only when `ready_for_generation` is `true`.
+
+Use `GET /projects/PROJECT_ID/?include=cost_estimate` to also get `cost_estimate` and `cost_per_shot`.
+
+### 5. Start video work
+
+Send an empty JSON object to `POST /projects/PROJECT_ID/video-jobs/`.
+
+```json
+{}
+```
+
+The API returns `202` when the job enters the work queue.
+
+The response body contains the job data.
+
+The response `Location` header contains the job URL.
+
+The same job URL is in `links.self`.
+
+### 6. Wait for the job
+
+Send `GET` to the job URL every 5 seconds.
+
+The `status` field can be `queued`, `processing`, `completed`, `failed`, `cancelled`, or `expired`.
+
+Stop when the status is `completed`, `failed`, `cancelled`, or `expired`.
+
+Read `error_message` when the status is not `completed`.
+
+Use a client wait limit of 30 minutes.
+
+### 7. Get the video
+
+After the job completes, send this request.
+
+```http
+GET /projects/PROJECT_ID/assets/videos/?tags=render_full&ordering=-created_at&page_size=1
+```
+
+Read the first item in `results`.
+
+Use `file` as the video URL when `file` has a value.
+
+Use `external_url` when `file` has no value.
+
+The `file` URL can expire.
+
+Send the same video asset request again to get a new URL.
+
+## Important Rules
+
+The API only returns data owned by the account for the API token.
+
+Image files and image asset IDs must belong to the same project.
+
+The account plan sets the project limit and shot limit.
+
+The account must have enough storage for image files.
+
+The account must have enough Credits before video work starts.
+
+Do not start two full video jobs for the same project at the same time.
+
+The API can return `400` for invalid data or low Credits.
+
+The API can return `401` when the API token is missing or invalid.
+
+The API can return `404` when a resource does not exist or belongs to another account.
+
+The API can return `429` when the client sends requests too fast.
+
+The API can return `503` when the work queue cannot accept a job.
+
+See the [API documentation](api.md) for the API schema and all optional routes.
+
+See the [simple real estate example](../examples/simple_real_estate_video.py) for a full Python client.
 
 ```python
 """Generate a real-estate video with local images or a Zillow listing."""
