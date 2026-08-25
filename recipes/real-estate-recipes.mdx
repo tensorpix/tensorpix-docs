@@ -1,0 +1,170 @@
+---
+title: "Real Estate Recipes"
+---
+
+<Warning>
+   Make sure the URL is publicly accessible and points to a video file. Example: `https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4`
+</Warning>
+
+```python
+"""Generate a real-estate video with local images or a Zillow listing."""
+
+import os
+import time
+from pathlib import Path
+
+import requests
+
+API_URL = "https://backend.tensorpix.ai/api/v2/real-estate"
+SOURCE = "images"
+IMAGE_PATHS = [Path("/path/to/property.jpg")]
+ZILLOW_URL = "https://www.zillow.com/homedetails/example/"
+
+TERMINAL_JOB_STATUSES = {"completed", "failed", "cancelled", "expired"}
+
+
+def wait_for_job(job_url: str, headers: dict[str, str]) -> dict:
+    """Poll a job until it completes or fails."""
+    deadline = time.monotonic() + 30 * 60
+
+    while time.monotonic() < deadline:
+        response = requests.get(job_url, headers=headers, timeout=60)
+        response.raise_for_status()
+        job = response.json()
+        print(f"Job {job['id']}: {job['status']}")
+
+        if job["status"] == "completed":
+            return job
+        if job["status"] in TERMINAL_JOB_STATUSES:
+            message = job.get("error_message") or f"Job ended as {job['status']}"
+            raise RuntimeError(message)
+
+        time.sleep(5)
+
+    raise TimeoutError("Job did not finish within 30 minutes.")
+
+
+def create_project(headers: dict[str, str]) -> str:
+    """Create a real-estate project and return its ID."""
+    response = requests.post(
+        f"{API_URL}/projects/",
+        headers=headers,
+        json={"name": "Simple API real-estate video"},
+        timeout=60,
+    )
+    response.raise_for_status()
+    return response.json()["id"]
+
+
+def upload_images(project_id: str, headers: dict[str, str]) -> list[str]:
+    """Upload local images and return their IDs."""
+    if not IMAGE_PATHS:
+        raise ValueError("Add at least one path to IMAGE_PATHS.")
+
+    image_ids = []
+    for image_path in IMAGE_PATHS:
+        with image_path.open("rb") as image_file:
+            response = requests.post(
+                f"{API_URL}/projects/{project_id}/assets/images/",
+                headers=headers,
+                files={"images": (image_path.name, image_file)},
+                timeout=60,
+            )
+        response.raise_for_status()
+        image_ids.append(response.json()[0]["id"])
+    return image_ids
+
+
+def import_zillow_images(project_id: str, headers: dict[str, str]) -> list[str]:
+    """Import Zillow images and return their IDs."""
+    response = requests.post(
+        f"{API_URL}/projects/{project_id}/property-import-jobs/",
+        headers=headers,
+        json={"url": ZILLOW_URL},
+        timeout=60,
+    )
+    response.raise_for_status()
+    wait_for_job(response.json()["links"]["self"], headers)
+
+    response = requests.get(
+        f"{API_URL}/projects/{project_id}/assets/images/",
+        headers=headers,
+        params={"page_size": 60, "ordering": "created_at"},
+        timeout=60,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    images = payload["results"] if isinstance(payload, dict) else payload
+    return [image["id"] for image in images]
+
+
+def create_shots(
+    project_id: str,
+    image_ids: list[str],
+    headers: dict[str, str],
+) -> None:
+    """Create one shot for each image ID."""
+    if not image_ids:
+        raise RuntimeError("The project has no images.")
+
+    response = requests.post(
+        f"{API_URL}/projects/{project_id}/shot-batches/",
+        headers=headers,
+        json={"image_asset_ids": image_ids},
+        timeout=60,
+    )
+    response.raise_for_status()
+
+
+def generate_video(project_id: str, headers: dict[str, str]) -> str:
+    """Generate the project video and return its URL."""
+    response = requests.post(
+        f"{API_URL}/projects/{project_id}/video-jobs/",
+        headers=headers,
+        json={},
+        timeout=60,
+    )
+    response.raise_for_status()
+    wait_for_job(response.json()["links"]["self"], headers)
+
+    response = requests.get(
+        f"{API_URL}/projects/{project_id}/assets/videos/",
+        headers=headers,
+        params={"tags": "render_full", "ordering": "-created_at", "page_size": 1},
+        timeout=60,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    videos = payload["results"] if isinstance(payload, dict) else payload
+
+    if not videos:
+        raise RuntimeError("The completed job has no rendered video.")
+
+    video_url = videos[0].get("file") or videos[0].get("external_url")
+    if not video_url:
+        raise RuntimeError("The rendered video has no URL.")
+
+    return video_url
+
+
+def main() -> None:
+    """Create a project, add images, and generate its final video."""
+    token = os.environ["TENSORPIX_API_TOKEN"]
+    headers = {"Authorization": f"Token {token}"}
+    project_id = create_project(headers)
+
+    if SOURCE == "images":
+        image_ids = upload_images(project_id, headers)
+    elif SOURCE == "zillow":
+        image_ids = import_zillow_images(project_id, headers)
+    else:
+        raise ValueError("SOURCE must be 'images' or 'zillow'.")
+
+    create_shots(project_id, image_ids, headers)
+    video_url = generate_video(project_id, headers)
+    print(video_url)
+
+
+if __name__ == "__main__":
+    main()
+```
