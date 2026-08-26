@@ -33,7 +33,7 @@ Image asset IDs must belong to the same project. The account plan sets the proje
 
 The API can return `400` for invalid data or low Credits. The API can return `401` for a missing or invalid API token. The API can return `404` when a resource does not exist or belongs to another account. The API can return `429` when the client sends requests too fast. The API can return `503` when the work queue cannot accept a job.
 
-```python
+```python focus={147}
 """Generate a real-estate video with local images or a Zillow listing."""
 
 import os
