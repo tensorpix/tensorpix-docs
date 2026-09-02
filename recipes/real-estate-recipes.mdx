@@ -2,3 +2,255 @@
 title: "Real Estate Recipes"
 icon: "house-building"
 ---
+
+<Warning>
+  Make sure all external URLs are publicly accessible. E.g. pre-sign private S3 assets.
+</Warning>
+
+# Real Estate API Use
+
+## Terms
+
+### Project
+
+A project stores the data and settings for one property video.
+
+### Image Asset
+
+An image asset is one image stored in a project.
+
+### Shot
+
+A shot is one scene in the final video.
+
+### Job
+
+A job is work that runs after the API sends a response.
+
+## Request Rules
+
+Use `https://backend.tensorpix.ai/api/v2/real-estate` as the base URL. Send `Authorization: Token API_TOKEN` in every request. Use `application/json` for JSON data. Use `multipart/form-data` for image files. The API only returns data owned by the account for the API token.
+
+## Main Flow
+
+1. Create a project for the property video.
+2. Import property images from public image URLs or a supported property listing.
+3. Attach the imported image assets to shots. The image order sets the shot order.
+4. Update project data and video settings, including the output orientation.
+5. Update each shot's duration and camera movement.
+6. Confirm that the project is ready for generation.
+7. Start video generation and wait for the job to finish.
+8. Get the final rendered video URL.
+
+## Limits And Errors
+
+Image asset IDs must belong to the same project. The account plan sets the project limit and shot limit. The account must have enough storage for image files. The account must have enough Credits before video work starts.
+
+```python
+"""Generate a real-estate video with public image URLs or a Zillow listing."""
+
+import os
+import time
+
+import requests
+
+API_TOKEN = os.environ["TENSORPIX_API_TOKEN"]
+API_URL = "https://backend.tensorpix.ai/api/v2/real-estate"
+
+SOURCE = "zillow"
+IMAGE_URLS = [
+    "https://fastly.picsum.photos/id/996/200/300.jpg?hmac=vjpTROwvLRamauR7RHTF21dxsN351pnM44SxoByue5c"
+]
+ZILLOW_URL = "https://www.zillow.com/homedetails/512-Winton-St-Philadelphia-PA-19148/10386909_zpid/"
+
+TERMINAL_JOB_STATUSES = {"completed", "failed", "cancelled", "expired"}
+
+
+def wait_for_job(job_url: str, headers: dict[str, str]) -> dict:
+    """Poll a job until it completes or fails."""
+    deadline = time.monotonic() + 30 * 60
+
+    while time.monotonic() < deadline:
+        response = requests.get(job_url, headers=headers, timeout=60)
+        response.raise_for_status()
+        job = response.json()
+        print(f"Job {job['id']}: {job['status']}")
+
+        if job["status"] == "completed":
+            return job
+        if job["status"] in TERMINAL_JOB_STATUSES:
+            message = job.get("error_message") or f"Job ended as {job['status']}"
+            raise RuntimeError(message)
+
+        time.sleep(5)
+
+    raise TimeoutError("Job did not finish within 30 minutes.")
+
+
+def create_project(headers: dict[str, str]) -> str:
+    """Create a real-estate project and return its ID."""
+    response = requests.post(
+        f"{API_URL}/projects/",
+        headers=headers,
+        json={"name": "Simple API real-estate video"},
+        timeout=60,
+    )
+    response.raise_for_status()
+    return response.json()["id"]
+
+
+def import_image_urls(project_id: str, headers: dict[str, str]) -> list[str]:
+    """Import public image URLs and return their asset IDs."""
+    if not IMAGE_URLS:
+        raise ValueError("Add at least one URL to IMAGE_URLS.")
+
+    response = requests.post(
+        f"{API_URL}/projects/{project_id}/assets/images/",
+        headers=headers,
+        json={"image_urls": IMAGE_URLS},
+        timeout=60,
+    )
+    response.raise_for_status()
+    return [image["id"] for image in response.json()]
+
+
+def import_zillow_images(project_id: str, headers: dict[str, str]) -> list[str]:
+    """Import Zillow images and return their IDs."""
+    response = requests.post(
+        f"{API_URL}/projects/{project_id}/property-import-jobs/",
+        headers=headers,
+        json={"url": ZILLOW_URL},
+        timeout=60,
+    )
+    response.raise_for_status()
+    job = response.json()
+    print(job)
+    job_url = f"{API_URL}/projects/{project_id}/property-import-jobs/{job['id']}/"
+    wait_for_job(job_url, headers)
+
+    response = requests.get(
+        f"{API_URL}/projects/{project_id}/assets/images/",
+        headers=headers,
+        params={"page_size": 60, "ordering": "created_at"},
+        timeout=60,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    images = payload["results"] if isinstance(payload, dict) else payload
+    return [image["id"] for image in images]
+
+
+def create_shots(
+    project_id: str,
+    image_ids: list[str],
+    headers: dict[str, str],
+) -> list[str]:
+    """Create one shot for each image ID and return the shot IDs."""
+    if not image_ids:
+        raise RuntimeError("The project has no images.")
+
+    response = requests.post(
+        f"{API_URL}/projects/{project_id}/shot-batches/",
+        headers=headers,
+        json={"image_asset_ids": image_ids},
+        timeout=60,
+    )
+    response.raise_for_status()
+    return [shot["id"] for shot in response.json()]
+
+
+def update_project_settings(project_id: str, headers: dict[str, str]) -> None:
+    """Set project-level video settings."""
+    response = requests.patch(
+        f"{API_URL}/projects/{project_id}/",
+        headers=headers,
+        json={"video_format": "16:9"},
+        timeout=60,
+    )
+    response.raise_for_status()
+
+
+def update_shot_settings(
+    project_id: str,
+    shot_ids: list[str],
+    headers: dict[str, str],
+) -> None:
+    """Set the duration and camera movement for each shot."""
+    for shot_id in shot_ids:
+        response = requests.patch(
+            f"{API_URL}/projects/{project_id}/shots/{shot_id}/",
+            headers=headers,
+            json={"requested_duration_s": 4.0, "camera_movement": "dolly_in"},
+            timeout=60,
+        )
+        response.raise_for_status()
+
+
+def ensure_project_is_ready(project_id: str, headers: dict[str, str]) -> None:
+    """Check that the project can start video generation."""
+    response = requests.get(
+        f"{API_URL}/projects/{project_id}/",
+        headers=headers,
+        timeout=60,
+    )
+    response.raise_for_status()
+    if not response.json()["ready_for_generation"]:
+        raise RuntimeError("The project is not ready for video generation.")
+
+
+def generate_video(project_id: str, headers: dict[str, str]) -> str:
+    """Generate the project video and return its URL."""
+    response = requests.post(
+        f"{API_URL}/projects/{project_id}/video-jobs/",
+        headers=headers,
+        json={},
+        timeout=60,
+    )
+    response.raise_for_status()
+    job = response.json()
+    job_url = f"{API_URL}/projects/{project_id}/video-jobs/{job['id']}/"
+    wait_for_job(job_url, headers)
+
+    response = requests.get(
+        f"{API_URL}/projects/{project_id}/assets/videos/",
+        headers=headers,
+        params={"tags": "render_full", "ordering": "-created_at", "page_size": 1},
+        timeout=60,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    videos = payload["results"] if isinstance(payload, dict) else payload
+
+    if not videos:
+        raise RuntimeError("The completed job has no rendered video.")
+
+    video_url = videos[0].get("file") or videos[0].get("external_url")
+    if not video_url:
+        raise RuntimeError("The rendered video has no URL.")
+
+    return video_url
+
+
+def main() -> None:
+    """Create a project, add images, and generate its final video."""
+    headers = {"Authorization": f"Token {API_TOKEN}"}
+    project_id = create_project(headers)
+
+    if SOURCE == "image_urls":
+        image_ids = import_image_urls(project_id, headers)
+    elif SOURCE == "zillow":
+        image_ids = import_zillow_images(project_id, headers)
+    else:
+        raise ValueError("SOURCE must be 'image_urls' or 'zillow'.")
+
+    shot_ids = create_shots(project_id, image_ids, headers)
+    update_project_settings(project_id, headers)
+    update_shot_settings(project_id, shot_ids, headers)
+    ensure_project_is_ready(project_id, headers)
+    video_url = generate_video(project_id, headers)
+    print(video_url)
+
+
+if __name__ == "__main__":
+    main()
+```
