@@ -4,14 +4,28 @@ icon: "house-building"
 ---
 
 <Warning>
-   Make sure the URL is publicly accessible and points to an image file. Example: `https://fastly.picsum.photos/id/996/200/300.jpg?hmac=vjpTROwvLRamauR7RHTF21dxsN351pnM44SxoByue5c` 
+  Make sure all external URLs are publicly accessible. E.g. pre-sign private S3 assets.
 </Warning>
 
 # Real Estate API Use
 
 ## Terms
 
-An API token proves which account sends a request. A project stores the data and settings for one property video. An image asset is one image stored in a project. A shot is one scene in the final video. A job is work that runs after the API sends a response.
+### Project
+
+A project stores the data and settings for one property video.
+
+### Image Asset
+
+An image asset is one image stored in a project.
+
+### Shot
+
+A shot is one scene in the final video.
+
+### Job
+
+A job is work that runs after the API sends a response.
 
 ## Request Rules
 
@@ -19,13 +33,14 @@ Use `https://backend.tensorpix.ai/api/v2/real-estate` as the base URL. Send `Aut
 
 ## Main Flow
 
-1. Create a project with `POST /projects/`. Send a name such as `{"name": "12 Green Street"}`. The API returns `201`. Save the response `id` as `PROJECT_ID`. Use `PATCH /projects/PROJECT_ID/` to change property data or video settings.
-2. Add images with `POST /projects/PROJECT_ID/assets/images/`. Send each file in a field named `images`. One request can contain from 1 to 60 images. The API returns `201` and a JSON list of image assets. Save each image asset `id`.
-3. Create shots with `POST /projects/PROJECT_ID/shot-batches/`. Send `{"image_asset_ids": ["IMAGE_ASSET_ID_1", "IMAGE_ASSET_ID_2"]}`. The image asset ID order sets the shot order. The API returns `201` and a JSON list of shots. The API starts image study work for each shot. The client does not need to wait for this work.
-4. Check the project with `GET /projects/PROJECT_ID/`. Start video work when `ready_for_generation` is `true`. Add `?include=cost_estimate` to also get `cost_estimate` and `cost_per_shot`.
-5. Start video work with `POST /projects/PROJECT_ID/video-jobs/`. Send an empty JSON object. The API returns `202` when the job enters the work queue. Use the job URL from the `Location` response header or from `links.self` in the response body.
-6. Send `GET` to the job URL every 5 seconds. The `status` value can be `queued`, `processing`, `completed`, `failed`, `cancelled`, or `expired`. Stop when the value is `completed`, `failed`, `cancelled`, or `expired`. Read `error_message` when the job does not complete. Use a client wait limit of 30 minutes.
-7. After the job completes, send `GET /projects/PROJECT_ID/assets/videos/?tags=render_full&ordering=-created_at`. Read the first item in `results`. Use `file` as the video URL when `file` has a value. Use `external_url` when `file` has no value. The `file` URL can expire. Send the request again to get a new URL.
+1. Create a project for the property video.
+2. Import property images from public image URLs or a supported property listing.
+3. Attach the imported image assets to shots. The image order sets the shot order.
+4. Update project data and video settings, including the output orientation.
+5. Update each shot's duration and camera movement.
+6. Confirm that the project is ready for generation.
+7. Start video generation and wait for the job to finish.
+8. Get the final rendered video URL.
 
 ## Limits And Errors
 
@@ -34,17 +49,18 @@ Image asset IDs must belong to the same project. The account plan sets the proje
 The API can return `400` for invalid data or low Credits. The API can return `401` for a missing or invalid API token. The API can return `404` when a resource does not exist or belongs to another account. The API can return `429` when the client sends requests too fast. The API can return `503` when the work queue cannot accept a job.
 
 ```python
-"""Generate a real-estate video with local images or a Zillow listing."""
+"""Generate a real-estate video with public image URLs or a Zillow listing."""
 
 import os
 import time
-from pathlib import Path
 
 import requests
 
 API_URL = "https://backend.tensorpix.ai/api/v2/real-estate"
-SOURCE = "images"
-IMAGE_PATHS = [Path("/path/to/property.jpg")]
+SOURCE = "image_urls"
+IMAGE_URLS = [
+    "https://fastly.picsum.photos/id/996/200/300.jpg?hmac=vjpTROwvLRamauR7RHTF21dxsN351pnM44SxoByue5c"
+]
 ZILLOW_URL = "https://www.zillow.com/homedetails/example/"
 
 TERMINAL_JOB_STATUSES = {"completed", "failed", "cancelled", "expired"}
@@ -83,23 +99,19 @@ def create_project(headers: dict[str, str]) -> str:
     return response.json()["id"]
 
 
-def upload_images(project_id: str, headers: dict[str, str]) -> list[str]:
-    """Upload local images and return their IDs."""
-    if not IMAGE_PATHS:
-        raise ValueError("Add at least one path to IMAGE_PATHS.")
+def import_image_urls(project_id: str, headers: dict[str, str]) -> list[str]:
+    """Import public image URLs and return their asset IDs."""
+    if not IMAGE_URLS:
+        raise ValueError("Add at least one URL to IMAGE_URLS.")
 
-    image_ids = []
-    for image_path in IMAGE_PATHS:
-        with image_path.open("rb") as image_file:
-            response = requests.post(
-                f"{API_URL}/projects/{project_id}/assets/images/",
-                headers=headers,
-                files={"images": (image_path.name, image_file)},
-                timeout=60,
-            )
-        response.raise_for_status()
-        image_ids.append(response.json()[0]["id"])
-    return image_ids
+    response = requests.post(
+        f"{API_URL}/projects/{project_id}/assets/images/",
+        headers=headers,
+        json={"image_urls": IMAGE_URLS},
+        timeout=60,
+    )
+    response.raise_for_status()
+    return [image["id"] for image in response.json()]
 
 
 def import_zillow_images(project_id: str, headers: dict[str, str]) -> list[str]:
@@ -129,8 +141,8 @@ def create_shots(
     project_id: str,
     image_ids: list[str],
     headers: dict[str, str],
-) -> None:
-    """Create one shot for each image ID."""
+) -> list[str]:
+    """Create one shot for each image ID and return the shot IDs."""
     if not image_ids:
         raise RuntimeError("The project has no images.")
 
@@ -141,6 +153,46 @@ def create_shots(
         timeout=60,
     )
     response.raise_for_status()
+    return [shot["id"] for shot in response.json()]
+
+
+def update_project_settings(project_id: str, headers: dict[str, str]) -> None:
+    """Set project-level video settings."""
+    response = requests.patch(
+        f"{API_URL}/projects/{project_id}/",
+        headers=headers,
+        json={"video_format": "16:9"},
+        timeout=60,
+    )
+    response.raise_for_status()
+
+
+def update_shot_settings(
+    project_id: str,
+    shot_ids: list[str],
+    headers: dict[str, str],
+) -> None:
+    """Set the duration and camera movement for each shot."""
+    for shot_id in shot_ids:
+        response = requests.patch(
+            f"{API_URL}/projects/{project_id}/shots/{shot_id}/",
+            headers=headers,
+            json={"requested_duration_s": 4.0, "camera_movement": "dolly_in"},
+            timeout=60,
+        )
+        response.raise_for_status()
+
+
+def ensure_project_is_ready(project_id: str, headers: dict[str, str]) -> None:
+    """Check that the project can start video generation."""
+    response = requests.get(
+        f"{API_URL}/projects/{project_id}/",
+        headers=headers,
+        timeout=60,
+    )
+    response.raise_for_status()
+    if not response.json()["ready_for_generation"]:
+        raise RuntimeError("The project is not ready for video generation.")
 
 
 def generate_video(project_id: str, headers: dict[str, str]) -> str:
@@ -180,14 +232,17 @@ def main() -> None:
     headers = {"Authorization": f"Token {token}"}
     project_id = create_project(headers)
 
-    if SOURCE == "images":
-        image_ids = upload_images(project_id, headers)
+    if SOURCE == "image_urls":
+        image_ids = import_image_urls(project_id, headers)
     elif SOURCE == "zillow":
         image_ids = import_zillow_images(project_id, headers)
     else:
-        raise ValueError("SOURCE must be 'images' or 'zillow'.")
+        raise ValueError("SOURCE must be 'image_urls' or 'zillow'.")
 
-    create_shots(project_id, image_ids, headers)
+    shot_ids = create_shots(project_id, image_ids, headers)
+    update_project_settings(project_id, headers)
+    update_shot_settings(project_id, shot_ids, headers)
+    ensure_project_is_ready(project_id, headers)
     video_url = generate_video(project_id, headers)
     print(video_url)
 
