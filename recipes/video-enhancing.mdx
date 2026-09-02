@@ -1,12 +1,15 @@
 ---
-title: 'Video Enhancing Recipes'
-description: 'Quickly get started by copying one of the video enhancing recipes.'
-icon: 'play'
+title: "Video Enhancing Recipes"
+description: "Quickly get started by copying one of the video enhancing recipes."
+icon: "play"
+sidebarTitle: "VIdeo Enhance"
 ---
 
 ## Enhancing video from URL
 
-<Warning> Make sure the URL is publicly accessible and points to a video file. Example: `https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4`</Warning>
+<Warning>
+   Make sure the URL is publicly accessible and points to a video file. Example: `https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4`
+</Warning>
 
 ### Python
 
@@ -67,4 +70,3 @@ print(f"Enhanced video available at: {enhanced_video_url}")
 # Cleaning up -- removing the enhanced video from TensorPix servers
 # remove_video(completed_job_data["output_video"]["id"])
 ```
-

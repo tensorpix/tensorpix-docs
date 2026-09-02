@@ -65,8 +65,7 @@
           {
             "group": "Code Recipes",
             "pages": [
-              "/recipes/video-enhancing",
-              "/recipes/image-enhancing"
+              "/recipes/video-enhancing"
             ]
           }
         ]
