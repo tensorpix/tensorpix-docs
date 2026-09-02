@@ -57,9 +57,13 @@ import requests
 API_TOKEN = os.environ["TENSORPIX_API_TOKEN"]
 API_URL = "https://backend.tensorpix.ai/api/v2/real-estate"
 
-SOURCE = "zillow"
+SOURCE = "image_urls"
 IMAGE_URLS = [
-    "https://fastly.picsum.photos/id/996/200/300.jpg?hmac=vjpTROwvLRamauR7RHTF21dxsN351pnM44SxoByue5c"
+  "https://cdn.tensorpix.ai/real-estate-demo/outside.webp",
+  "https://cdn.tensorpix.ai/real-estate-demo/living-room.webp",
+  "https://cdn.tensorpix.ai/real-estate-demo/kitchen.webp",
+  "https://cdn.tensorpix.ai/real-estate-demo/bedroom.webp",
+  "https://cdn.tensorpix.ai/real-estate-demo/bathroom.webp",
 ]
 ZILLOW_URL = "https://www.zillow.com/homedetails/512-Winton-St-Philadelphia-PA-19148/10386909_zpid/"
 
@@ -198,8 +202,8 @@ def ensure_project_is_ready(project_id: str, headers: dict[str, str]) -> None:
         raise RuntimeError("The project is not ready for video generation.")
 
 
-def generate_video(project_id: str, headers: dict[str, str]) -> str:
-    """Generate the project video and return its URL."""
+def generate_video(project_id: str, headers: dict[str, str]) -> tuple[str, str]:
+    """Generate the project video and return its asset ID and URL."""
     response = requests.post(
         f"{API_URL}/projects/{project_id}/video-jobs/",
         headers=headers,
@@ -228,7 +232,31 @@ def generate_video(project_id: str, headers: dict[str, str]) -> str:
     if not video_url:
         raise RuntimeError("The rendered video has no URL.")
 
-    return video_url
+    return videos[0]["id"], video_url
+
+
+def delete_video(
+    project_id: str,
+    video_id: str,
+    headers: dict[str, str],
+) -> None:
+    """Delete one video asset from the project."""
+    response = requests.delete(
+        f"{API_URL}/projects/{project_id}/assets/videos/{video_id}/",
+        headers=headers,
+        timeout=60,
+    )
+    response.raise_for_status()
+
+
+def delete_project(project_id: str, headers: dict[str, str]) -> None:
+    """Hide the project and queue its cleanup."""
+    response = requests.delete(
+        f"{API_URL}/projects/{project_id}/",
+        headers=headers,
+        timeout=60,
+    )
+    response.raise_for_status()
 
 
 def main() -> None:
@@ -247,8 +275,12 @@ def main() -> None:
     update_project_settings(project_id, headers)
     update_shot_settings(project_id, shot_ids, headers)
     ensure_project_is_ready(project_id, headers)
-    video_url = generate_video(project_id, headers)
+    video_id, video_url = generate_video(project_id, headers)
     print(video_url)
+	
+	# save water, save storage
+    # delete_video(project_id, video_id, headers)
+    # delete_project(project_id, headers)
 
 
 if __name__ == "__main__":
